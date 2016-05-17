@@ -1223,6 +1223,12 @@
 #endif
 
 
+/* Define if isl_options_set_schedule_serialize_sccs exists. */
+#ifndef USED_FOR_TARGET
+#undef HAVE_ISL_OPTIONS_SET_SCHEDULE_SERIALIZE_SCCS
+#endif
+
+
 /* Define if isl_schedule_constraints_compute_schedule exists. */
 #ifndef USED_FOR_TARGET
 #undef HAVE_ISL_SCHED_CONSTRAINTS_COMPUTE_SCHEDULE
@@ -1673,6 +1679,10 @@
 #undef HAVE_WORKING_VFORK
 #endif
 
+/* Define if isl is in use. */
+#ifndef USED_FOR_TARGET
+#undef HAVE_isl
+#endif
 
 /* Define to 1 if the system has the type `__int64'. */
 #ifndef USED_FOR_TARGET
@@ -1684,7 +1694,6 @@
 #ifndef USED_FOR_TARGET
 #undef HAVE_cloog
 #endif
-
 
 /* Define if F_SETLKW supported by fcntl. */
 #ifndef USED_FOR_TARGET

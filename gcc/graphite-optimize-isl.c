@@ -279,8 +279,9 @@ getPrevectorMap (isl_ctx *ctx, int DimToVectorize,
   isl_aff *Aff;
   int PointDimension; /* ip */
   int TileDimension;  /* it */
-  isl_int VectorWidthMP;
+  isl_val *VectorWidthMP;
   int i;
+  isl_ctx *ct;
 
   /* assert (0 <= DimToVectorize && DimToVectorize < ScheduleDimensions);*/
 
@@ -310,10 +311,9 @@ getPrevectorMap (isl_ctx *ctx, int DimToVectorize,
   Aff = isl_aff_zero_on_domain (LocalSpaceRange);
   Aff = isl_aff_set_constant_si (Aff, VectorWidth);
   Aff = isl_aff_set_coefficient_si (Aff, isl_dim_in, TileDimension, 1);
-  isl_int_init (VectorWidthMP);
-  isl_int_set_si (VectorWidthMP, VectorWidth);
-  Aff = isl_aff_mod (Aff, VectorWidthMP);
-  isl_int_clear (VectorWidthMP);
+  ct = isl_aff_get_ctx (Aff);
+  VectorWidthMP = isl_val_int_from_si (ct, VectorWidth);
+  Aff = isl_aff_mod_val (Aff, VectorWidthMP);
   Modulo = isl_pw_aff_zero_set (isl_pw_aff_from_aff (Aff));
   TilingMap = isl_map_intersect_range (TilingMap, Modulo);
 
@@ -375,7 +375,8 @@ getScheduleForBandList (isl_band_list *BandList)
 							      SuffixSchedule);
 	  isl_band_list_free (Children);
 	}
-      else if (EnablePollyVector)
+
+	else if (EnablePollyVector)
 	{
 	  for (i = ScheduleDimensions - 1 ;  i >= 0 ; i--)
 	    {
@@ -417,13 +418,13 @@ getScheduleMap (isl_schedule *Schedule)
   return ScheduleMap;
 }
 
-static int
+static isl_stat
 getSingleMap (__isl_take isl_map *map, void *user)
 {
   isl_map **singleMap = (isl_map **) user;
   *singleMap = map;
 
-  return 0;
+  return isl_stat_ok;
 }
 
 static void
@@ -471,7 +472,11 @@ optimize_isl (scop_p scop)
 
   isl_options_set_schedule_max_constant_term (scop->ctx, CONSTANT_BOUND);
   isl_options_set_schedule_maximize_band_depth (scop->ctx, 1);
+#ifdef HAVE_ISL_OPTIONS_SET_SCHEDULE_SERIALIZE_SCCS
+  isl_options_set_schedule_serialize_sccs (scop->ctx, 1);
+#else
   isl_options_set_schedule_fuse (scop->ctx, ISL_SCHEDULE_FUSE_MIN);
+#endif
   isl_options_set_on_error (scop->ctx, ISL_ON_ERROR_CONTINUE);
   schedule = isl_union_set_compute_schedule (domain, validity, proximity);
   isl_options_set_on_error (scop->ctx, ISL_ON_ERROR_ABORT);
